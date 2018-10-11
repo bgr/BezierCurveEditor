@@ -166,16 +166,15 @@ public class BezierCurve : MonoBehaviour
         dirty = true;
     }
 
-    /// <summary>
-    ///     - Adds a point at position
-    /// </summary>
-    /// <returns>
-    ///     - The point object
-    /// </returns>
-    /// <param name='position'>
-    ///     - Where to add the point
-    /// </param>
-    public BezierPoint AddPointAt(Vector3 position)
+    public void InsertPoint(int index, BezierPoint point)
+    {
+        List<BezierPoint> tempArray = new List<BezierPoint>(points);
+        tempArray.Insert(index, point);
+        points = tempArray.ToArray();
+        dirty = true;
+    }
+
+    public BezierPoint CreatePointAt(Vector3 position)
     {
         GameObject pointObject = new GameObject("Point " + pointCount);
 
@@ -187,6 +186,45 @@ public class BezierCurve : MonoBehaviour
 
         return newPoint;
     }
+
+    /// <summary>
+    ///     - Adds a point at position
+    /// </summary>
+    /// <returns>
+    ///     - The point object
+    /// </returns>
+    /// <param name='position'>
+    ///     - Where to add the point
+    /// </param>
+    public BezierPoint AddPointAt(Vector3 position)
+    {
+        BezierPoint newPoint = CreatePointAt(position);
+
+        AddPoint(newPoint);
+
+        return newPoint;
+    }
+
+    public BezierPoint AddPointBehind(Vector3 position)
+    {
+        BezierPoint newPoint = CreatePointAt(position);
+
+        newPoint.transform.SetAsFirstSibling();
+        InsertPoint(0, newPoint);
+
+        return newPoint;
+    }
+
+    public BezierPoint InsertPointAt(int index, Vector3 position)
+    {
+        BezierPoint newPoint = CreatePointAt(position);
+
+        newPoint.transform.SetSiblingIndex(index);
+        InsertPoint(index, newPoint);
+
+        return newPoint;
+    }
+
 
     /// <summary>
     ///     - Removes the given point from the curve ("points" array)
@@ -202,6 +240,29 @@ public class BezierCurve : MonoBehaviour
         dirty = false;
     }
 
+    public void RemovePoint(int index)
+    {
+        List<BezierPoint> tempArray = new List<BezierPoint>(points);
+        tempArray.RemoveAt(index);
+        points = tempArray.ToArray();
+        dirty = false;
+    }
+
+    /// <summary>
+    /// To be called when errors start flying.
+    /// </summary>
+    public void CleanupNullPoints()
+    {
+        List<BezierPoint> cleanPoints = new List<BezierPoint>();
+
+        foreach (var p in points)
+        {
+            if (p != null) cleanPoints.Add(p);
+        }
+        points = cleanPoints.ToArray();
+        dirty = false;
+    }
+
     /// <summary>
     ///     - Gets a copy of the bezier point array used to define this curve
     /// </summary>
@@ -211,6 +272,12 @@ public class BezierCurve : MonoBehaviour
     public BezierPoint[] GetAnchorPoints()
     {
         return (BezierPoint[])points.Clone();
+    }
+
+
+    public BezierPoint Last()
+    {
+        return this[points.Length - 1];
     }
 
     /// <summary>
@@ -233,17 +300,38 @@ public class BezierCurve : MonoBehaviour
         BezierPoint p1 = null;
         BezierPoint p2 = null;
 
-        for (int i = 0; i < points.Length - 1; i++)
+        // code below modified by nothke
+
+        int approxResolution = 10;
+
+        int index = 0;
+        int maxIters = 10;
+
+        while (p1 == null && p2 == null)
         {
-            curvePercent = ApproximateLength(points[i], points[i + 1], 10) / length;
-            if (totalPercent + curvePercent > t)
+            for (int i = 0; i < points.Length - 1; i++)
             {
-                p1 = points[i];
-                p2 = points[i + 1];
-                break;
+                curvePercent = ApproximateLength(points[i], points[i + 1], approxResolution) / length;
+
+                if (totalPercent + curvePercent > t)
+                {
+                    p1 = points[i];
+                    p2 = points[i + 1];
+                    break;
+                }
+
+                else totalPercent += curvePercent;
             }
 
-            else totalPercent += curvePercent;
+            index++;
+
+            approxResolution += 10;
+
+            if (index >= maxIters)
+            {
+                Debug.LogWarning("TOO MUCH ITERATIONS!!!");
+                return Vector3.zero;
+            }
         }
 
         if (close && p1 == null)
@@ -254,7 +342,109 @@ public class BezierCurve : MonoBehaviour
 
         t -= totalPercent;
 
+        if (p1 == null) Debug.LogError("p1 is null");
+        if (p2 == null) Debug.LogError("p2 is null");
+
         return GetPoint(p1, p2, t / curvePercent);
+    }
+
+    public Vector3 GetTangentAt(float t)
+    {
+        if (t <= 0) return points[0].position;
+        else if (t >= 1) return points[points.Length - 1].position;
+
+        float totalPercent = 0;
+        float curvePercent = 0;
+
+        BezierPoint p1 = null;
+        BezierPoint p2 = null;
+
+        int approxResolution = 10; // added by nothke
+
+        int index = 0;
+        int maxIters = 10;
+
+        while (p1 == null && p2 == null)
+        {
+            for (int i = 0; i < points.Length - 1; i++)
+            {
+                curvePercent = ApproximateLength(points[i], points[i + 1], approxResolution) / length;
+
+                if (totalPercent + curvePercent > t)
+                {
+                    p1 = points[i];
+                    p2 = points[i + 1];
+                    break;
+                }
+
+                else totalPercent += curvePercent;
+            }
+
+            index++;
+
+            approxResolution += 10;
+
+            if (index >= maxIters)
+            {
+                Debug.LogWarning("TOO MUCH ITERATIONS!!!");
+                return Vector3.zero;
+            }
+        }
+
+        if (close && p1 == null)
+        {
+            p1 = points[points.Length - 1];
+            p2 = points[0];
+        }
+
+        t -= totalPercent;
+
+        if (p1 == null) Debug.LogError("p1 is null");
+        if (p2 == null) Debug.LogError("p2 is null");
+
+        return GetTangent(p1, p2, t / curvePercent);
+    }
+
+    public Vector3 GetTangent(BezierPoint bp1, BezierPoint bp2, float t)
+    {
+        if (bp1.handleStyle == BezierPoint.HandleStyle.None &&
+            bp2.handleStyle == BezierPoint.HandleStyle.None)
+        {
+            return (bp2.position - bp1.position).normalized;
+        }
+
+        Vector3 a = bp1.position;
+        Vector3 b = bp1.globalHandle2;
+        Vector3 c = bp2.globalHandle1;
+        Vector3 d = bp2.position;
+
+        return Tangent(a, b, c, d, t);
+    }
+
+    public Vector3 GetLocalTangent(BezierPoint bp1, BezierPoint bp2, float t)
+    {
+        if (bp1.handleStyle == BezierPoint.HandleStyle.None &&
+            bp2.handleStyle == BezierPoint.HandleStyle.None)
+        {
+            return (bp2.localPosition - bp1.localPosition).normalized;
+        }
+
+        Vector3 a = bp1.localPosition;
+        Vector3 b = bp1.localPosition + bp1.handle2;
+        Vector3 c = bp2.localPosition + bp2.handle1;
+        Vector3 d = bp2.localPosition;
+
+        return Tangent(a, b, c, d, t);
+    }
+
+    public static Vector3 Tangent(Vector3 a, Vector3 b, Vector3 c, Vector3 d, float t)
+    {
+        Vector3 C1 = (d - (3.0f * c) + (3.0f * b) - a);
+        Vector3 C2 = ((3.0f * c) - (6.0f * b) + (3.0f * a));
+        Vector3 C3 = ((3.0f * b) - (3.0f * a));
+        //Vector3 C4 = (a);
+
+        return ((3.0f * C1 * t * t) + (2.0f * C2 * t) + C3);
     }
 
     /// <summary>
@@ -349,6 +539,26 @@ public class BezierCurve : MonoBehaviour
         {
             if (p2.handle1 != Vector3.zero) return GetQuadraticCurvePoint(p1.position, p2.globalHandle1, p2.position, t);
             else return GetLinearPoint(p1.position, p2.position, t);
+        }
+    }
+
+    public static Vector3 GetPointLocal(BezierPoint p1, BezierPoint p2, float t)
+    {
+        //Vector3 p1H1 = p1.localPosition + p1.handle1;
+        Vector3 p1H2 = p1.localPosition + p1.handle2;
+        Vector3 p2H1 = p2.localPosition + p2.handle1;
+        //Vector3 p2H2 = p2.localPosition + p2.handle2;
+
+        if (p1.handle2 != Vector3.zero)
+        {
+            if (p2.handle1 != Vector3.zero) return GetCubicCurvePoint(p1.localPosition, p1H2, p2H1, p2.localPosition, t);
+            else return GetQuadraticCurvePoint(p1.localPosition, p1H2, p2.localPosition, t);
+        }
+
+        else
+        {
+            if (p2.handle1 != Vector3.zero) return GetQuadraticCurvePoint(p1.localPosition, p2H1, p2.localPosition, t);
+            else return GetLinearPoint(p1.localPosition, p2.localPosition, t);
         }
     }
 

@@ -27,6 +27,8 @@ public class BezierCurveEditor : Editor
     {
         serializedObject.Update();
 
+        if (curve.resolution < 2) curve.resolution = 2;
+
         EditorGUILayout.PropertyField(resolutionProp);
         EditorGUILayout.PropertyField(closeProp);
         EditorGUILayout.PropertyField(colorProp);
@@ -39,6 +41,12 @@ public class BezierCurveEditor : Editor
 
             for (int i = 0; i < pointCount; i++)
             {
+                if (curve[i] == null)
+                {
+                    Debug.LogWarning("Point is missing, please clean up manually");
+                    continue;
+                }
+
                 DrawPointInspector(curve[i], i);
             }
 
@@ -46,19 +54,36 @@ public class BezierCurveEditor : Editor
             {
                 GameObject pointObject = new GameObject("Point " + pointsProp.arraySize);
                 pointObject.transform.parent = curve.transform;
-                pointObject.transform.localPosition = Vector3.zero;
 
                 Undo.RegisterCreatedObjectUndo(pointObject, "Add Point");
+
+                Vector3 direction;
+                Vector3 pos;
+                if (pointCount >= 1)
+                {
+                    direction = (curve.GetAnchorPoints()[pointCount - 1].handle2 - curve.GetAnchorPoints()[pointCount - 1].handle1).normalized;
+                    pointObject.transform.localPosition = curve.GetAnchorPoints()[pointCount - 1].localPosition + direction * 2;
+                }
+                else
+                {
+                    direction = Vector3.forward;
+                    pointObject.transform.localPosition = Vector3.zero;
+                }
 
                 BezierPoint newPoint = pointObject.AddComponent<BezierPoint>();
 
                 newPoint.curve = curve;
-                newPoint.handle1 = Vector3.right * 0.1f;
-                newPoint.handle2 = -Vector3.right * 0.1f;
+                newPoint.handle1 = -direction;
+                newPoint.handle2 = direction;
 
                 pointsProp.InsertArrayElementAtIndex(pointsProp.arraySize);
                 pointsProp.GetArrayElementAtIndex(pointsProp.arraySize - 1).objectReferenceValue = newPoint;
             }
+        }
+
+        if (GUILayout.Button("Clean-up null points"))
+        {
+            curve.CleanupNullPoints();
         }
 
         if (GUI.changed)
