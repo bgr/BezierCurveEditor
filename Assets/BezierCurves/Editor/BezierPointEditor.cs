@@ -101,7 +101,7 @@ public class BezierPointEditor : Editor
     {
 
         Handles.color = Color.green;
-        Vector3 newPosition = Handles.FreeMoveHandle(point.position, point.transform.rotation, HandleUtility.GetHandleSize(point.position) * 0.2f, Vector3.zero, Handles.CubeCap);
+        Vector3 newPosition = Handles.FreeMoveHandle(point.position, point.transform.rotation, HandleUtility.GetHandleSize(point.position) * 0.2f, Vector3.zero, Handles.CubeHandleCap);
         if (point.position != newPosition) point.position = newPosition;
 
         handlers[(int)point.handleStyle](point);
@@ -117,20 +117,20 @@ public class BezierPointEditor : Editor
     {
         Handles.color = Color.cyan;
 
-        Vector3 newGlobal1 = Handles.FreeMoveHandle(p.globalHandle1, p.transform.rotation, HandleUtility.GetHandleSize(p.globalHandle1) * 0.15f, Vector3.zero, Handles.SphereCap);
+        Vector3 newGlobal1 = Handles.FreeMoveHandle(p.globalHandle1, p.transform.rotation, HandleUtility.GetHandleSize(p.globalHandle1) * 0.15f, Vector3.zero, Handles.SphereHandleCap);
 
         if (newGlobal1 != p.globalHandle1)
         {
-            Undo.RegisterUndo(p, "Move Handle");
+            Undo.RecordObject(p, "Move Handle");
             p.globalHandle1 = newGlobal1;
             p.globalHandle2 = -(newGlobal1 - p.position) + p.position;
         }
 
-        Vector3 newGlobal2 = Handles.FreeMoveHandle(p.globalHandle2, p.transform.rotation, HandleUtility.GetHandleSize(p.globalHandle2) * 0.15f, Vector3.zero, Handles.SphereCap);
+        Vector3 newGlobal2 = Handles.FreeMoveHandle(p.globalHandle2, p.transform.rotation, HandleUtility.GetHandleSize(p.globalHandle2) * 0.15f, Vector3.zero, Handles.SphereHandleCap);
 
         if (newGlobal2 != p.globalHandle2)
         {
-            Undo.RegisterUndo(p, "Move Handle");
+            Undo.RecordObject(p, "Move Handle");
             p.globalHandle1 = -(newGlobal2 - p.position) + p.position;
             p.globalHandle2 = newGlobal2;
         }
@@ -140,18 +140,18 @@ public class BezierPointEditor : Editor
     {
         Handles.color = Color.cyan;
 
-        Vector3 newGlobal1 = Handles.FreeMoveHandle(p.globalHandle1, Quaternion.identity, HandleUtility.GetHandleSize(p.globalHandle1) * 0.15f, Vector3.zero, Handles.SphereCap);
-        Vector3 newGlobal2 = Handles.FreeMoveHandle(p.globalHandle2, Quaternion.identity, HandleUtility.GetHandleSize(p.globalHandle2) * 0.15f, Vector3.zero, Handles.SphereCap);
+        Vector3 newGlobal1 = Handles.FreeMoveHandle(p.globalHandle1, Quaternion.identity, HandleUtility.GetHandleSize(p.globalHandle1) * 0.15f, Vector3.zero, Handles.SphereHandleCap);
+        Vector3 newGlobal2 = Handles.FreeMoveHandle(p.globalHandle2, Quaternion.identity, HandleUtility.GetHandleSize(p.globalHandle2) * 0.15f, Vector3.zero, Handles.SphereHandleCap);
 
         if (newGlobal1 != p.globalHandle1)
         {
-            Undo.RegisterUndo(p, "Move Handle");
+            Undo.RecordObject(p, "Move Handle");
             p.globalHandle1 = newGlobal1;
         }
 
         if (newGlobal2 != p.globalHandle2)
         {
-            Undo.RegisterUndo(p, "Move Handle");
+            Undo.RecordObject(p, "Move Handle");
             p.globalHandle2 = newGlobal2;
         }
     }
