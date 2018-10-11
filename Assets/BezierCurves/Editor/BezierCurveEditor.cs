@@ -10,6 +10,8 @@ public class BezierCurveEditor : Editor
     SerializedProperty closeProp;
     SerializedProperty pointsProp;
     SerializedProperty colorProp;
+    SerializedProperty mirrorProp;
+    SerializedProperty mirrorAxisProp;
 
     private static bool showPoints = true;
 
@@ -21,6 +23,8 @@ public class BezierCurveEditor : Editor
         closeProp = serializedObject.FindProperty("_close");
         pointsProp = serializedObject.FindProperty("points");
         colorProp = serializedObject.FindProperty("drawColor");
+        mirrorProp = serializedObject.FindProperty("_mirror");
+        mirrorAxisProp = serializedObject.FindProperty("_axis");
     }
 
     public override void OnInspectorGUI()
@@ -80,6 +84,73 @@ public class BezierCurveEditor : Editor
                 pointsProp.GetArrayElementAtIndex(pointsProp.arraySize - 1).objectReferenceValue = newPoint;
             }
         }
+
+        EditorGUILayout.PropertyField(mirrorProp);
+
+        if (curve.mirror)
+        {
+            EditorGUILayout.PropertyField(mirrorAxisProp);
+        }
+
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Snap to X"))
+        {
+            Transform[] bpObjects = new Transform[curve.pointCount];
+            for (int i = 0; i < bpObjects.Length; i++)
+                bpObjects[i] = curve[i].transform;
+
+            Undo.RecordObjects(bpObjects, "Snap to Axis");
+            curve.SnapAllNodesToAxis(BezierCurve.Axis.X);
+        }
+        if (GUILayout.Button("Snap to Y"))
+        {
+            Transform[] bpObjects = new Transform[curve.pointCount];
+            for (int i = 0; i < bpObjects.Length; i++)
+                bpObjects[i] = curve[i].transform;
+
+            Undo.RecordObjects(bpObjects, "Snap to Axis");
+            curve.SnapAllNodesToAxis(BezierCurve.Axis.Y);
+        }
+        if (GUILayout.Button("Snap to Z"))
+        {
+            Transform[] bpObjects = new Transform[curve.pointCount];
+            for (int i = 0; i < bpObjects.Length; i++)
+                bpObjects[i] = curve[i].transform;
+
+            Undo.RecordObjects(bpObjects, "Snap to Axis");
+            curve.SnapAllNodesToAxis(BezierCurve.Axis.Z);
+        }
+        EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("Mirror X"))
+        {
+            Transform[] bpObjects = new Transform[curve.pointCount];
+            for (int i = 0; i < bpObjects.Length; i++)
+                bpObjects[i] = curve[i].transform;
+
+            Undo.RecordObjects(bpObjects, "Mirror Around Axis");
+            curve.MirrorAllNodesAroundAxis(BezierCurve.Axis.X);
+        }
+        if (GUILayout.Button("Mirror Y"))
+        {
+            Transform[] bpObjects = new Transform[curve.pointCount];
+            for (int i = 0; i < bpObjects.Length; i++)
+                bpObjects[i] = curve[i].transform;
+
+            Undo.RecordObjects(bpObjects, "Mirror Around Axis");
+            curve.MirrorAllNodesAroundAxis(BezierCurve.Axis.Y);
+        }
+        if (GUILayout.Button("Mirror Z"))
+        {
+            Transform[] bpObjects = new Transform[curve.pointCount];
+            for (int i = 0; i < bpObjects.Length; i++)
+                bpObjects[i] = curve[i].transform;
+
+            Undo.RecordObjects(bpObjects, "Mirror Around Axis");
+            curve.MirrorAllNodesAroundAxis(BezierCurve.Axis.Z);
+        }
+        EditorGUILayout.EndHorizontal();
 
         if (GUILayout.Button("Clean-up null points"))
         {

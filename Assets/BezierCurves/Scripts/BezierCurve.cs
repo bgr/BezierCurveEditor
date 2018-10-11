@@ -62,6 +62,34 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
+    [SerializeField]
+    private bool _mirror;
+    public bool mirror
+    {
+        get { return _mirror; }
+        set
+        {
+            if (_mirror == value) return;
+            _mirror = value;
+            dirty = true;
+        }
+    }
+
+    public enum Axis { X, Y, Z }
+
+    [SerializeField]
+    private Axis _axis;
+    public Axis axis
+    {
+        get { return _axis; }
+        set
+        {
+            if (_axis == value) return;
+            _axis = value;
+            dirty = true;
+        }
+    }
+
     /// <summary>
     ///             - set internally
     ///             - gets point corresponding to "index" in "points" array
@@ -140,7 +168,17 @@ public class BezierCurve : MonoBehaviour
             }
 
             if (close) DrawCurve(points[points.Length - 1], points[0], resolution);
+
+            if (mirror)
+            {
+                for (int i = 0; i < points.Length - 1; i++)
+                {
+                    DrawCurveMirrored(transform, points[i], points[i + 1], resolution, axis);
+                }
+            }
         }
+
+
     }
 
     void Awake()
@@ -151,6 +189,53 @@ public class BezierCurve : MonoBehaviour
     #endregion
 
     #region PublicFunctions
+
+    public void SnapAllNodesToAxis(Axis axis)
+    {
+        for (int i = 0; i < points.Length; i++)
+        {
+            switch (axis)
+            {
+                case Axis.X:
+                    points[i].localPosition = new Vector3(0, points[i].localPosition.y, points[i].localPosition.z);
+                    points[i].handle1 = new Vector3(0, points[i].handle1.y, points[i].handle1.z);
+                    points[i].handle2 = new Vector3(0, points[i].handle2.y, points[i].handle2.z);
+                    break;
+                case Axis.Y:
+                    points[i].localPosition = new Vector3(points[i].localPosition.x, 0, points[i].localPosition.z);
+                    points[i].handle1 = new Vector3(points[i].handle1.x, 0, points[i].handle1.z);
+                    points[i].handle2 = new Vector3(points[i].handle2.x, 0, points[i].handle2.z);
+                    break;
+                case Axis.Z:
+                    points[i].localPosition = new Vector3(points[i].localPosition.x, points[i].localPosition.y, 0);
+                    points[i].handle1 = new Vector3(points[i].handle1.x, points[i].handle1.y, 0);
+                    points[i].handle2 = new Vector3(points[i].handle2.x, points[i].handle2.y, 0);
+                    break;
+            }
+        }
+    }
+
+    public void MirrorAllNodesAroundAxis(Axis axis)
+    {
+        for (int i = 0; i < points.Length; i++)
+        {
+            switch (axis)
+            {
+                case Axis.X:
+                    points[i].localPosition = new Vector3(-points[i].localPosition.x, points[i].localPosition.y, points[i].localPosition.z);
+                    points[i].handle1 = new Vector3(-points[i].handle1.x, points[i].handle1.y, points[i].handle1.z);
+                    break;
+                case Axis.Y:
+                    points[i].localPosition = new Vector3(points[i].localPosition.x, -points[i].localPosition.y, points[i].localPosition.z);
+                    points[i].handle1 = new Vector3(points[i].handle1.x, -points[i].handle1.y, points[i].handle1.z);
+                    break;
+                case Axis.Z:
+                    points[i].localPosition = new Vector3(points[i].localPosition.x, points[i].localPosition.y, -points[i].localPosition.z);
+                    points[i].handle1 = new Vector3(points[i].handle1.x, points[i].handle1.y, -points[i].handle1.z);
+                    break;
+            }
+        }
+    }
 
     /// <summary>
     ///     - Adds the given point to the end of the curve ("points" array)
@@ -509,6 +594,48 @@ public class BezierCurve : MonoBehaviour
             Gizmos.DrawLine(lastPoint, currentPoint);
             lastPoint = currentPoint;
         }
+    }
+
+    public static void DrawCurveMirrored(Transform localTransform, BezierPoint p1, BezierPoint p2, int resolution, Axis axis)
+    {
+        int limit = resolution + 1;
+        float _res = resolution;
+        Vector3 lastPoint = p1.position;
+
+        // TODO: Not really nice
+        lastPoint = localTransform.InverseTransformPoint(lastPoint);
+        lastPoint = GetMirroredPoint(lastPoint, axis);
+        lastPoint = localTransform.TransformPoint(lastPoint);
+
+
+        Vector3 currentPoint = Vector3.zero;
+
+        for (int i = 1; i < limit; i++)
+        {
+            currentPoint = GetPoint(p1, p2, i / _res);
+
+            currentPoint = localTransform.InverseTransformPoint(currentPoint);
+            currentPoint = GetMirroredPoint(currentPoint, axis);
+            currentPoint = localTransform.TransformPoint(currentPoint);
+
+            Gizmos.DrawLine(lastPoint, currentPoint);
+            lastPoint = currentPoint;
+        }
+    }
+
+    public static Vector3 GetMirroredPoint(Vector3 point, Axis axis)
+    {
+        switch (axis)
+        {
+            case Axis.X:
+                point.x *= -1; break;
+            case Axis.Y:
+                point.y *= -1; break;
+            case Axis.Z:
+                point.z *= -1; break;
+        }
+
+        return point;
     }
 
     /// <summary>
