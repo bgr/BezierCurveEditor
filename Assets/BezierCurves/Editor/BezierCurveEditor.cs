@@ -62,7 +62,6 @@ public class BezierCurveEditor : Editor
                 Undo.RegisterCreatedObjectUndo(pointObject, "Add Point");
 
                 Vector3 direction;
-                Vector3 pos;
                 if (pointCount >= 1)
                 {
                     direction = (curve.GetAnchorPoints()[pointCount - 1].handle2 - curve.GetAnchorPoints()[pointCount - 1].handle1).normalized;
