@@ -656,17 +656,53 @@ public class BezierCurve : MonoBehaviour
     /// </param>
     public static Vector3 GetPoint(BezierPoint p1, BezierPoint p2, float t)
     {
-        if (p1.handle2 != Vector3.zero)
-        {
-            if (p2.handle1 != Vector3.zero) return GetCubicCurvePoint(p1.position, p1.globalHandle2, p2.globalHandle1, p2.position, t);
-            else return GetQuadraticCurvePoint(p1.position, p1.globalHandle2, p2.position, t);
-        }
+        return GetPoint(p1.position, p1.globalHandle1, p1.globalHandle2, p2.position, p2.globalHandle1, p2.globalHandle2, t);
+    }
 
+    /// <summary>
+    /// All arguments are global positions. Returns global position at 't' percent along the curve.
+    /// </summary>
+    public static Vector3 GetPoint(Vector3 p1, Vector3 p1Handle1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, Vector3 p2Handle2, float t)
+    {
+        if (p1Handle2 != p1)
+        {
+            if (p2Handle1 != p2) return GetCubicCurvePoint(p1, p1Handle2, p2Handle1, p2, t);
+            else return GetQuadraticCurvePoint(p1, p1Handle2, p2, t);
+        }
         else
         {
-            if (p2.handle1 != Vector3.zero) return GetQuadraticCurvePoint(p1.position, p2.globalHandle1, p2.position, t);
-            else return GetLinearPoint(p1.position, p2.position, t);
+            if (p2Handle1 != p2) return GetQuadraticCurvePoint(p1, p2Handle1, p2, t);
+            else return GetLinearPoint(p1, p2, t);
         }
+    }
+
+    /// <summary>
+    ///     - Gets point 't' percent along n-order curve
+    /// </summary>
+    /// <returns>
+    ///     - The point 't' percent along the curve
+    /// </returns>
+    /// <param name='t'>
+    ///     - Value between 0 and 1 representing the percent along the curve (0 = 0%, 1 = 100%)
+    /// </param>
+    /// <param name='points'>
+    ///     - The points used to define the curve
+    /// </param>
+    public static Vector3 GetPoint(float t, params Vector3[] points)
+    {
+        t = Mathf.Clamp01(t);
+
+        int order = points.Length - 1;
+        Vector3 point = Vector3.zero;
+        Vector3 vectorToAdd;
+
+        for (int i = 0; i < points.Length; i++)
+        {
+            vectorToAdd = points[points.Length - i - 1] * (BinomialCoefficient(i, order) * Mathf.Pow(t, order - i) * Mathf.Pow((1 - t), i));
+            point += vectorToAdd;
+        }
+
+        return point;
     }
 
     public static Vector3 GetPointLocal(BezierPoint p1, BezierPoint p2, float t)
@@ -770,35 +806,6 @@ public class BezierCurve : MonoBehaviour
     public static Vector3 GetLinearPoint(Vector3 p1, Vector3 p2, float t)
     {
         return p1 + ((p2 - p1) * t);
-    }
-
-    /// <summary>
-    ///     - Gets point 't' percent along n-order curve
-    /// </summary>
-    /// <returns>
-    ///     - The point 't' percent along the curve
-    /// </returns>
-    /// <param name='t'>
-    ///     - Value between 0 and 1 representing the percent along the curve (0 = 0%, 1 = 100%)
-    /// </param>
-    /// <param name='points'>
-    ///     - The points used to define the curve
-    /// </param>
-    public static Vector3 GetPoint(float t, params Vector3[] points)
-    {
-        t = Mathf.Clamp01(t);
-
-        int order = points.Length - 1;
-        Vector3 point = Vector3.zero;
-        Vector3 vectorToAdd;
-
-        for (int i = 0; i < points.Length; i++)
-        {
-            vectorToAdd = points[points.Length - i - 1] * (BinomialCoefficient(i, order) * Mathf.Pow(t, order - i) * Mathf.Pow((1 - t), i));
-            point += vectorToAdd;
-        }
-
-        return point;
     }
 
     /// <summary>
