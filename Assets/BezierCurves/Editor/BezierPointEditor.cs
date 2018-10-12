@@ -110,7 +110,7 @@ public class BezierPointEditor : Editor
         Handles.DrawLine(point.position, point.globalHandle1);
         Handles.DrawLine(point.position, point.globalHandle2);
 
-        BezierCurveEditor.DrawOtherPoints(point.curve, point);
+        BezierCurveEditor.DrawOtherPoints(point._curve, point);
     }
 
     private static void HandleConnected(BezierPoint p)

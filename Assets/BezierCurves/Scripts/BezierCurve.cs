@@ -267,7 +267,7 @@ public class BezierCurve : MonoBehaviour
         pointObject.transform.position = position;
 
         BezierPoint newPoint = pointObject.AddComponent<BezierPoint>();
-        newPoint.curve = this;
+        newPoint._curve = this;
 
         return newPoint;
     }

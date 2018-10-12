@@ -36,19 +36,22 @@ public class BezierPoint : MonoBehaviour
     #region PublicProperties
 
     /// <summary>
-    ///             - Curve this point belongs to
+    ///     - Curve this point belongs to
     ///     - Changing this value will automatically remove this point from the current curve and add it to the new one
     /// </summary>
-    [SerializeField]
-    private BezierCurve _curve;
+    [HideInInspector]
+    public BezierCurve _curve;  // use this internally and handle adding/removing manually
     public BezierCurve curve
     {
         get { return _curve; }
         set
         {
-            if (_curve) _curve.RemovePoint(this);
-            _curve = value;
-            _curve.AddPoint(this);
+            if (value != _curve)
+            {
+                if (_curve) _curve.RemovePoint(this);
+                _curve = value;
+                if (_curve) _curve.AddPoint(this);
+            }
         }
     }
 

@@ -75,7 +75,7 @@ public class BezierCurveEditor : Editor
 
                 BezierPoint newPoint = pointObject.AddComponent<BezierPoint>();
 
-                newPoint.curve = curve;
+                newPoint._curve = curve;
                 newPoint.handle1 = -direction;
                 newPoint.handle2 = direction;
 
