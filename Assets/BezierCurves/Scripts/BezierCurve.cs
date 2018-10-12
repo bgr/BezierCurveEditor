@@ -570,6 +570,25 @@ public class BezierCurve : MonoBehaviour
     #region PublicStaticFunctions
 
     /// <summary>
+    /// All arguments are global positions. Returns 'resolution + 1' interpolated points from 'p1' until 'p2', inclusive.
+    /// </summary>
+    public static Vector3[] Interpolate(Vector3 p1, Vector3 p1Handle1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, Vector3 p2Handle2, int resolution)
+    {
+        var points = new Vector3[resolution + 1];
+        points[0] = p1;
+        points[points.Length - 1] = p2;
+
+        float _res = resolution;
+
+        for (int i = 1; i < points.Length - 1; i++)
+        {
+            points[i] = GetPoint(p1, p1Handle1, p1Handle2, p2, p2Handle1, p2Handle2, i / _res);
+        }
+
+        return points;
+    }
+
+    /// <summary>
     ///     - Draws the curve in the Editor
     /// </summary>
     /// <param name='p1'>
@@ -583,14 +602,14 @@ public class BezierCurve : MonoBehaviour
     /// </param>
     public static void DrawCurve(BezierPoint p1, BezierPoint p2, int resolution)
     {
-        int limit = resolution + 1;
-        float _res = resolution;
-        Vector3 lastPoint = p1.position;
+        var interpolated = Interpolate(p1.position, p1.globalHandle1, p1.globalHandle2, p2.position, p2.globalHandle1, p2.globalHandle2, resolution);
+
+        Vector3 lastPoint = interpolated[0];
         Vector3 currentPoint = Vector3.zero;
 
-        for (int i = 1; i < limit; i++)
+        for (int i = 1; i < interpolated.Length; i++)
         {
-            currentPoint = GetPoint(p1, p2, i / _res);
+            currentPoint = interpolated[i];
             Gizmos.DrawLine(lastPoint, currentPoint);
             lastPoint = currentPoint;
         }
