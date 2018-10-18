@@ -142,6 +142,8 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
+    [NonSerialized] public int lastClickedPointIndex = -1;
+
     #endregion
 
     #region PrivateVariables

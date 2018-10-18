@@ -167,7 +167,7 @@ public class BezierCurveEditor : Editor
     {
         for (int i = 0; i < curve.pointCount; i++)
         {
-            DrawPointSceneGUI(curve[i]);
+            DrawPointSceneGUI(curve[i], i);
         }
     }
 
@@ -293,7 +293,7 @@ public class BezierCurveEditor : Editor
         }
     }
 
-    static void DrawPointSceneGUI(BezierPoint point)
+    static void DrawPointSceneGUI(BezierPoint point, int index)
     {
         if (point == null)
         {
@@ -311,6 +311,10 @@ public class BezierCurveEditor : Editor
         {
             Undo.RecordObject(point.transform, "Move Point");
             point.transform.position = newPosition;
+        }
+        else if (GUIUtility.hotControl == ctrlId)
+        {
+            point.curve.lastClickedPointIndex = index;
         }
 
         if (point.handleStyle != BezierPoint.HandleStyle.None)
@@ -344,7 +348,7 @@ public class BezierCurveEditor : Editor
 
         foreach (BezierPoint p in curve.GetAnchorPoints())
         {
-            if (p != caller) DrawPointSceneGUI(p);
+            if (p != caller) DrawPointSceneGUI(p, 0);
         }
     }
 
