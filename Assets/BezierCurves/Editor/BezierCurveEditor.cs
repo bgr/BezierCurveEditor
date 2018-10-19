@@ -178,6 +178,7 @@ public class BezierCurveEditor : Editor
             Undo.RecordObject(target, "Remove Point");
             pointsProp.MoveArrayElement(curve.GetPointIndex(point), curve.pointCount - 1);
             pointsProp.arraySize--;
+            curve.SetDirty();
             return;
         }
 
@@ -194,6 +195,7 @@ public class BezierCurveEditor : Editor
             Undo.RecordObject(target, "Remove Point");
             pointsProp.MoveArrayElement(curve.GetPointIndex(point), curve.pointCount - 1);
             pointsProp.arraySize--;
+            curve.SetDirty();
             Undo.DestroyObjectImmediate(point.gameObject);
             return;
         }
@@ -205,6 +207,7 @@ public class BezierCurveEditor : Editor
             UnityEngine.Object other = pointsProp.GetArrayElementAtIndex(index - 1).objectReferenceValue;
             pointsProp.GetArrayElementAtIndex(index - 1).objectReferenceValue = point;
             pointsProp.GetArrayElementAtIndex(index).objectReferenceValue = other;
+            curve.SetDirty();
         }
 
         if (index != pointsProp.arraySize - 1 && GUILayout.Button(@"\/", GUILayout.Width(25)))
@@ -212,6 +215,7 @@ public class BezierCurveEditor : Editor
             UnityEngine.Object other = pointsProp.GetArrayElementAtIndex(index + 1).objectReferenceValue;
             pointsProp.GetArrayElementAtIndex(index + 1).objectReferenceValue = point;
             pointsProp.GetArrayElementAtIndex(index).objectReferenceValue = other;
+            curve.SetDirty();
         }
 
         EditorGUILayout.EndHorizontal();
@@ -249,13 +253,15 @@ public class BezierCurveEditor : Editor
                 handle1Prop.vector3Value = Vector3.zero;
                 handle2Prop.vector3Value = Vector3.zero;
             }
+
+            curve.SetDirty();
         }
 
-        Vector3 newPointPos = EditorGUILayout.Vector3Field("Position : ", point.transform.localPosition);
-        if (newPointPos != point.transform.localPosition)
+        Vector3 newPointPos = EditorGUILayout.Vector3Field("Position : ", point.localPosition);
+        if (newPointPos != point.localPosition)
         {
             Undo.RecordObject(point.transform, "Move Bezier Point");
-            point.transform.localPosition = newPointPos;
+            point.localPosition = newPointPos;
         }
 
         if (handleStyleProp.enumValueIndex == 0)
@@ -267,6 +273,7 @@ public class BezierCurveEditor : Editor
             {
                 handle1Prop.vector3Value = newPosition;
                 handle2Prop.vector3Value = -newPosition;
+                curve.SetDirty();
             }
 
             newPosition = EditorGUILayout.Vector3Field("Handle 2", handle2Prop.vector3Value);
@@ -274,6 +281,7 @@ public class BezierCurveEditor : Editor
             {
                 handle1Prop.vector3Value = -newPosition;
                 handle2Prop.vector3Value = newPosition;
+                curve.SetDirty();
             }
         }
 
@@ -310,7 +318,7 @@ public class BezierCurveEditor : Editor
         if (newPosition != point.position)
         {
             Undo.RecordObject(point.transform, "Move Point");
-            point.transform.position = newPosition;
+            point.position = newPosition;
         }
         else if (GUIUtility.hotControl == ctrlId)
         {

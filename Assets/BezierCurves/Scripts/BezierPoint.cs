@@ -69,7 +69,11 @@ public class BezierPoint : MonoBehaviour
     public Vector3 position
     {
         get { return transform.position; }
-        set { transform.position = value; }
+        set
+        {
+            transform.position = value;
+            _curve.SetDirty();
+        }
     }
 
     /// <summary>
@@ -81,7 +85,11 @@ public class BezierPoint : MonoBehaviour
     public Vector3 localPosition
     {
         get { return transform.localPosition; }
-        set { transform.localPosition = value; }
+        set
+        {
+            transform.localPosition = value;
+            _curve.SetDirty();
+        }
     }
 
     /// <summary>
@@ -163,7 +171,7 @@ public class BezierPoint : MonoBehaviour
 
     void Update()
     {
-        if (!_curve.dirty && transform.position != lastPosition)
+        if (transform.position != lastPosition)
         {
             _curve.SetDirty();
             lastPosition = transform.position;
