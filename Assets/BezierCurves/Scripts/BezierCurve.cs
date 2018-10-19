@@ -846,14 +846,19 @@ public class BezierCurve : MonoBehaviour
     /// </param>
     public static float ApproximateLength(BezierPoint p1, BezierPoint p2, int resolution = 10)
     {
+        return ApproximateLength(p1.position, p1.globalHandle1, p1.globalHandle2, p2.position, p2.globalHandle1, p2.globalHandle2, resolution);
+    }
+
+    public static float ApproximateLength(Vector3 p1, Vector3 p1Handle1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, Vector3 p2Handle2, int resolution = 10)
+    {
         float _res = resolution;
         float total = 0;
-        Vector3 lastPosition = p1.position;
+        Vector3 lastPosition = p1;
         Vector3 currentPosition;
 
         for (int i = 0; i < resolution + 1; i++)
         {
-            currentPosition = GetPoint(p1, p2, i / _res);
+            currentPosition = GetPoint(p1, p1Handle1, p1Handle2, p2, p2Handle1, p2Handle2, i / _res);
             total += (currentPosition - lastPosition).magnitude;
             lastPosition = currentPosition;
         }
