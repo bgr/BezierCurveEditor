@@ -1,0 +1,12 @@
+{
+    "name": "BezierCurves.Editor",
+    "references": [
+        "BezierCurves"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}
