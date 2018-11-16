@@ -31,7 +31,7 @@ public class BezierCurveEditor : Editor
     {
         serializedObject.Update();
 
-        if (curve.resolution < 2) curve.resolution = 2;
+        if (curve.resolution < 0.0001f) curve.resolution = 0.0001f;
 
         EditorGUILayout.PropertyField(resolutionProp);
         EditorGUILayout.PropertyField(closeProp);

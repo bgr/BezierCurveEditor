@@ -16,15 +16,20 @@ using UnityEngine;
 [Serializable]
 public class BezierCurve : MonoBehaviour
 {
+    // the number of interpolated points for each curve segment (pair of BezierPoints) is calculated
+    // by approximating the segment length using this crude value, just to get enough precision to
+    // account for segments's shape dictated by its handles (instead of just using straight lines)
+    private const int RESOLUTION_TO_NUMPOINTS_FACTOR = 3;
 
     #region PublicVariables
 
     /// <summary>
-    ///     - the number of mid-points calculated for each pair of bezier points
-    ///     - used for drawing the curve in the editor
+    ///     - used for calculating the number of interpolated points for each pair of bezier points
+    ///     - the value corresponds approximately to the number of points per meter
+    ///     - the number of interpolated points will be approximately "length of curve * resolution"
     ///     - used for calculating the "length" variable
     /// </summary>
-    public int resolution = 30;
+    public float resolution = 5;
 
     /// <summary>
     /// Gets or sets a value indicating whether this <see cref="BezierCurve"/> is dirty.
@@ -574,15 +579,15 @@ public class BezierCurve : MonoBehaviour
     #region PublicStaticFunctions
 
     /// <summary>
-    /// All arguments are global positions. Returns 'resolution + 1' interpolated points from 'p1' until 'p2', inclusive.
+    /// All arguments are global positions. Returns 'numPoints + 1' interpolated points from 'p1' until 'p2', inclusive.
     /// </summary>
-    public static Vector3[] Interpolate(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, int resolution)
+    public static Vector3[] Interpolate(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, int numPoints)
     {
-        var points = new Vector3[resolution + 1];
+        var points = new Vector3[numPoints + 1];
         points[0] = p1;
         points[points.Length - 1] = p2;
 
-        float _res = resolution;
+        float _res = numPoints;
 
         for (int i = 1; i < points.Length - 1; i++)
         {
@@ -590,6 +595,12 @@ public class BezierCurve : MonoBehaviour
         }
 
         return points;
+    }
+
+    public static Vector3[] Interpolate(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, float resolution)
+    {
+        int numPoints = GetNumPoints(p1, p1Handle2, p2, p2Handle1, resolution);
+        return Interpolate(p1, p1Handle2, p2, p2Handle1, numPoints);
     }
 
     /// <summary>
@@ -620,6 +631,12 @@ public class BezierCurve : MonoBehaviour
             DrawInterpolatedPoint(lastPoint);
         }
     }
+
+    public static void DrawCurve(BezierPoint p1, BezierPoint p2, float resolution)
+    {
+        DrawCurve(p1, p2, GetNumPoints(p1, p2, resolution));
+    }
+
 
     static void DrawInterpolatedPoint(Vector3 position)
     {
@@ -660,6 +677,11 @@ public class BezierCurve : MonoBehaviour
             Gizmos.DrawLine(lastPoint, currentPoint);
             lastPoint = currentPoint;
         }
+    }
+
+    public static void DrawCurveMirrored(Transform localTransform, BezierPoint p1, BezierPoint p2, float resolution, Axis axis)
+    {
+        DrawCurveMirrored(localTransform, p1, p2, GetNumPoints(p1, p2, resolution), axis);
     }
 
     public static Vector3 GetMirroredPoint(Vector3 point, Axis axis)
@@ -859,22 +881,22 @@ public class BezierCurve : MonoBehaviour
     /// <param name='p2'>
     ///     - The bezier point at the end of the curve
     /// </param>
-    /// <param name='resolution'>
+    /// <param name='numPoints'>
     ///     - The number of points along the curve used to create measurable segments
     /// </param>
-    public static float ApproximateLength(BezierPoint p1, BezierPoint p2, int resolution = 10)
+    public static float ApproximateLength(BezierPoint p1, BezierPoint p2, int numPoints = 10)
     {
-        return ApproximateLength(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, resolution);
+        return ApproximateLength(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, numPoints);
     }
 
-    public static float ApproximateLength(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, int resolution = 10)
+    public static float ApproximateLength(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, int numPoints = 10)
     {
-        float _res = resolution;
+        float _res = numPoints;
         float total = 0;
         Vector3 lastPosition = p1;
         Vector3 currentPosition;
 
-        for (int i = 0; i < resolution + 1; i++)
+        for (int i = 0; i < numPoints + 1; i++)
         {
             currentPosition = GetPoint(p1, p1Handle2, p2, p2Handle1, i / _res);
             total += (currentPosition - lastPosition).magnitude;
@@ -882,6 +904,33 @@ public class BezierCurve : MonoBehaviour
         }
 
         return total;
+    }
+
+    public static float ApproximateLength(BezierPoint p1, BezierPoint p2, float resolution = 0.5f)
+    {
+        int numPoints = GetNumPoints(p1, p2, resolution);
+        return ApproximateLength(p1, p2, numPoints);
+    }
+
+    public static float ApproximateLength(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, float resolution = 0.5f)
+    {
+        int numPoints = GetNumPoints(p1, p1Handle2, p2, p2Handle1, resolution);
+        return ApproximateLength(p1, p1Handle2, p2, p2Handle1, numPoints);
+    }
+
+    /// <summary>
+    /// Returns the number of points required to interpolate the given bezier points to a given resolution.
+    /// </summary>
+    public static int GetNumPoints(BezierPoint p1, BezierPoint p2, float resolution)
+    {
+        return GetNumPoints(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, resolution);
+    }
+
+    public static int GetNumPoints(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, float resolution)
+    {
+        float length = ApproximateLength(p1, p1Handle2, p2, p2Handle1, RESOLUTION_TO_NUMPOINTS_FACTOR);
+        int numPoints = Mathf.RoundToInt(length * resolution);
+        return Math.Max(2, numPoints);
     }
 
     #endregion
