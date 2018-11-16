@@ -13,7 +13,7 @@ public class BezierCurveEditor : Editor
     SerializedProperty mirrorProp;
     SerializedProperty mirrorAxisProp;
 
-    private static bool showPoints = true;
+    private static bool showPointsFoldout = true;
 
     void OnEnable()
     {
@@ -36,10 +36,11 @@ public class BezierCurveEditor : Editor
         EditorGUILayout.PropertyField(resolutionProp);
         EditorGUILayout.PropertyField(closeProp);
         EditorGUILayout.PropertyField(colorProp);
+        BezierCurve.drawInterpolatedPoints = GUILayout.Toggle(BezierCurve.drawInterpolatedPoints, "Draw Interpolated Points");
 
-        showPoints = EditorGUILayout.Foldout(showPoints, "Points");
+        showPointsFoldout = EditorGUILayout.Foldout(showPointsFoldout, "Points");
 
-        if (showPoints)
+        if (showPointsFoldout)
         {
             int pointCount = pointsProp.arraySize;
 

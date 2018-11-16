@@ -40,6 +40,8 @@ public class BezierCurve : MonoBehaviour
     /// </summary>
     public Color drawColor = Color.white;
 
+    public static bool drawInterpolatedPoints = false; // have all curves in scene use the same value
+
     #endregion
 
     #region PublicProperties
@@ -608,14 +610,30 @@ public class BezierCurve : MonoBehaviour
 
         Vector3 lastPoint = interpolated[0];
         Vector3 currentPoint = Vector3.zero;
+        DrawInterpolatedPoint(lastPoint);
 
         for (int i = 1; i < interpolated.Length; i++)
         {
             currentPoint = interpolated[i];
             Gizmos.DrawLine(lastPoint, currentPoint);
             lastPoint = currentPoint;
+            DrawInterpolatedPoint(lastPoint);
         }
     }
+
+    static void DrawInterpolatedPoint(Vector3 position)
+    {
+#if UNITY_EDITOR
+        if (!drawInterpolatedPoints) return;
+        float size = UnityEditor.HandleUtility.GetHandleSize(position);
+        float radius = 0.03f;
+        var oldColor = Gizmos.color;
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(position, size * radius);
+        Gizmos.color = oldColor;
+#endif
+    }
+
 
     public static void DrawCurveMirrored(Transform localTransform, BezierPoint p1, BezierPoint p2, int resolution, Axis axis)
     {
