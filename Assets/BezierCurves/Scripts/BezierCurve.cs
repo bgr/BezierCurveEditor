@@ -576,7 +576,7 @@ public class BezierCurve : MonoBehaviour
     /// <summary>
     /// All arguments are global positions. Returns 'resolution + 1' interpolated points from 'p1' until 'p2', inclusive.
     /// </summary>
-    public static Vector3[] Interpolate(Vector3 p1, Vector3 p1Handle1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, Vector3 p2Handle2, int resolution)
+    public static Vector3[] Interpolate(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, int resolution)
     {
         var points = new Vector3[resolution + 1];
         points[0] = p1;
@@ -586,7 +586,7 @@ public class BezierCurve : MonoBehaviour
 
         for (int i = 1; i < points.Length - 1; i++)
         {
-            points[i] = GetPoint(p1, p1Handle1, p1Handle2, p2, p2Handle1, p2Handle2, i / _res);
+            points[i] = GetPoint(p1, p1Handle2, p2, p2Handle1, i / _res);
         }
 
         return points;
@@ -606,7 +606,7 @@ public class BezierCurve : MonoBehaviour
     /// </param>
     public static void DrawCurve(BezierPoint p1, BezierPoint p2, int resolution)
     {
-        var interpolated = Interpolate(p1.position, p1.globalHandle1, p1.globalHandle2, p2.position, p2.globalHandle1, p2.globalHandle2, resolution);
+        var interpolated = Interpolate(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, resolution);
 
         Vector3 lastPoint = interpolated[0];
         Vector3 currentPoint = Vector3.zero;
@@ -695,13 +695,13 @@ public class BezierCurve : MonoBehaviour
     /// </param>
     public static Vector3 GetPoint(BezierPoint p1, BezierPoint p2, float t)
     {
-        return GetPoint(p1.position, p1.globalHandle1, p1.globalHandle2, p2.position, p2.globalHandle1, p2.globalHandle2, t);
+        return GetPoint(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, t);
     }
 
     /// <summary>
     /// All arguments are global positions. Returns global position at 't' percent along the curve.
     /// </summary>
-    public static Vector3 GetPoint(Vector3 p1, Vector3 p1Handle1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, Vector3 p2Handle2, float t)
+    public static Vector3 GetPoint(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, float t)
     {
         if (p1Handle2 != p1)
         {
@@ -864,10 +864,10 @@ public class BezierCurve : MonoBehaviour
     /// </param>
     public static float ApproximateLength(BezierPoint p1, BezierPoint p2, int resolution = 10)
     {
-        return ApproximateLength(p1.position, p1.globalHandle1, p1.globalHandle2, p2.position, p2.globalHandle1, p2.globalHandle2, resolution);
+        return ApproximateLength(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, resolution);
     }
 
-    public static float ApproximateLength(Vector3 p1, Vector3 p1Handle1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, Vector3 p2Handle2, int resolution = 10)
+    public static float ApproximateLength(Vector3 p1, Vector3 p1Handle2, Vector3 p2, Vector3 p2Handle1, int resolution = 10)
     {
         float _res = resolution;
         float total = 0;
@@ -876,7 +876,7 @@ public class BezierCurve : MonoBehaviour
 
         for (int i = 0; i < resolution + 1; i++)
         {
-            currentPosition = GetPoint(p1, p1Handle1, p1Handle2, p2, p2Handle1, p2Handle2, i / _res);
+            currentPosition = GetPoint(p1, p1Handle2, p2, p2Handle1, i / _res);
             total += (currentPosition - lastPosition).magnitude;
             lastPosition = currentPosition;
         }
