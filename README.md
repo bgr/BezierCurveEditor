@@ -16,9 +16,12 @@ Summary:
 
 * Curve interpolation is now more homogenous across segments on same curve
 * Curves in existing projects will change in appearance, and might impact performance until you update the values
-* You'll have to tweak the values on existing curves to desired precision
+* An automatic resolution recalculation will be done when Unity encounters old curves (on scene open, prefab instantiation, play, etc.)
+* You might have to tweak the values on existing curves to desired precision
 * You might have to update your code to revise how you calculate the resolution value
 
 This change makes sure that all segments have approximately the same resolution - with resolution now meaning the same number of interpolated points **per unit of distance** across the whole curve.
 
 Previously, a curve whose segments are very different in length (e.g. a curve made of 3 points, where one segment is short and one very long) would have all segments interpolated with the same number of points, causing short segments to be interpolated too densely, and long segments to be insufficiently precise, with visible poly-line shape.
+
+Automatic curve resolution recalculation will be done when Unity encounters old curves (on scene open, prefab instantiation, play, etc.), which will update the resolution value by dividing the old resolution by the length of the shortest curve segment. This will cause the longer segments have more interpolated points than before, but will prevent loss of precision on the shortest segment.

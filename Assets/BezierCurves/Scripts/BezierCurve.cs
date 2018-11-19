@@ -23,6 +23,8 @@ public class BezierCurve : MonoBehaviour
 
     #region PublicVariables
 
+    [HideInInspector] public int version = 1; // will be updated by BezierCurveUpgrade
+
     /// <summary>
     ///     - used for calculating the number of interpolated points for each pair of bezier points
     ///     - the value corresponds approximately to the number of points per meter
@@ -192,6 +194,7 @@ public class BezierCurve : MonoBehaviour
 
     void Awake()
     {
+        BezierCurveUpgrade.Upgrade(this);
         dirty = true;
     }
 
