@@ -4,6 +4,10 @@ This repo is a fork of [BezierCurveEditor by Arkham Interactive from Unity Asset
 
 It differs from the version on the Asset Store - the first commit is the code by the original author, the rest are customizations made in the last couple of years we've been using the code. Those are mostly additions to existing functionality.
 
+# Optimization
+
+Add `BEZIER_POINT_NO_UPDATE` to Scripting Define Symbols to disable the Update method in BezierPoint class, which can boost performance in play mode when there are many bezier points in the scene. Note that if you move bezier points in play mode, you'll have to call `SetDirty()` on the curve manually when this optimization is enabled.
+
 
 # Breaking changes
 

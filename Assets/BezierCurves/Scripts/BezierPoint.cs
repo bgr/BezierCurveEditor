@@ -169,6 +169,7 @@ public class BezierPoint : MonoBehaviour
 
     #region MonoBehaviourFunctions
 
+#if !BEZIER_POINT_NO_UPDATE
     void Update()
     {
         if (transform.position != lastPosition)
@@ -177,6 +178,7 @@ public class BezierPoint : MonoBehaviour
             lastPosition = transform.position;
         }
     }
+#endif
 
     #endregion
 }
