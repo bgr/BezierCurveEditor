@@ -7,7 +7,7 @@ public static class BezierCurveUpgrade
     public static void Upgrade(BezierCurve curve)
     {
         // resolution logic change - adapt old serialized resolution value to new behavior
-        if (curve.version < 2)
+        if (curve.version < 2 && curve.pointCount >= 2)
         {
             Debug.Log(string.Format("[BezierCurve upgrade] adapting curve resolution value for '{0}'", curve.name), curve);
 
