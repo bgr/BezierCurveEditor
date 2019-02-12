@@ -33,13 +33,7 @@ public class BezierCurve : MonoBehaviour
     /// </summary>
     public float resolution = 5;
 
-    /// <summary>
-    /// Gets or sets a value indicating whether this <see cref="BezierCurve"/> is dirty.
-    /// </summary>
-    /// <value>
-    /// <c>true</c> if dirty; otherwise, <c>false</c>.
-    /// </value>
-    public bool dirty { get; private set; }
+    [NonSerialized] public bool dirty = true;
 
     /// <summary>
     ///     - color this curve will be drawn with in the editor
@@ -134,7 +128,7 @@ public class BezierCurve : MonoBehaviour
     {
         get
         {
-            if (dirty)
+            if (dirty || _length == 0)
             {
                 _length = 0;
                 for (int i = 0; i < points.Length - 1; i++)
