@@ -160,6 +160,7 @@ public class BezierCurveEditor : Editor
         if (GUI.changed)
         {
             serializedObject.ApplyModifiedProperties();
+            curve.SetDirty();
             EditorUtility.SetDirty(target);
         }
     }
