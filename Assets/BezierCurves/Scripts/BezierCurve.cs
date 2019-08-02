@@ -371,6 +371,88 @@ public class BezierCurve : MonoBehaviour
         return this[points.Length - 1];
     }
 
+    struct TBetweenPointsData
+    {
+        public BezierPoint p1;
+        public BezierPoint p2;
+        public float t;
+    }
+    // Helper method for finding a pair of points and a corresponding local 't' for given global 't'
+    TBetweenPointsData GetTBetweenPoints(float t)
+    {
+        if (t <= 0)
+        {
+            return new TBetweenPointsData { p1 = points[0], p2 = points[1], t = 0 };
+        }
+        else if (t >= 1)
+        {
+            if (close)
+            {
+                return new TBetweenPointsData { p1 = points[points.Length - 1], p2 = points[0], t = 1 };
+            }
+            else
+            {
+                return new TBetweenPointsData { p1 = points[points.Length - 2], p2 = points[points.Length - 1], t = 1 };
+            }
+        }
+        else
+        {
+            float totalPercent = 0;
+            float curvePercent = 0;
+
+            BezierPoint p1 = null;
+            BezierPoint p2 = null;
+
+            int approxResolution = 10;
+
+
+            int safetyCounter = 0;
+            int maxIters = 10;
+
+            while (p1 == null && p2 == null)
+            {
+                totalPercent = 0;
+
+                int end = close ? points.Length : points.Length - 1;
+                for (int i = 0; i < end; i++)
+                {
+                    var pa = points[i];
+                    var pb = points[(i + 1) % points.Length];
+                    curvePercent = ApproximateLength(pa, pb, approxResolution) / length;
+
+                    if ((totalPercent + curvePercent > t) || Mathf.Abs(t - (totalPercent + curvePercent)) < 5e-6)
+                    {
+                        p1 = pa;
+                        p2 = pb;
+                        break;
+                    }
+                    else
+                    {
+                        totalPercent += curvePercent;
+                    }
+                }
+
+                approxResolution += 10;
+
+                if (++safetyCounter >= maxIters)
+                {
+                    Debug.LogError("BezierCurve couldn't find a point", this);
+                    return default(TBetweenPointsData);
+                }
+            }
+
+            if (p1 == null) Debug.LogError("p1 is null");
+            if (p2 == null) Debug.LogError("p2 is null");
+
+            var ret = new TBetweenPointsData();
+            ret.p1 = p1;
+            ret.p2 = p2;
+            ret.t = (t - totalPercent) / curvePercent;
+
+            return ret;
+        }
+    }
+
     /// <summary>
     ///     - Gets the point at 't' percent along this curve
     /// </summary>
@@ -382,116 +464,14 @@ public class BezierCurve : MonoBehaviour
     /// </param>
     public Vector3 GetPointAt(float t)
     {
-        if (t <= 0) return points[0].position;
-        else if (t >= 1) return (close ? points[0] : points[points.Length - 1]).position;
-
-        float totalPercent = 0;
-        float curvePercent = 0;
-
-        BezierPoint p1 = null;
-        BezierPoint p2 = null;
-
-        int approxResolution = 10;
-
-
-        int safetyCounter = 0;
-        int maxIters = 10;
-
-        while (p1 == null && p2 == null)
-        {
-            totalPercent = 0;
-
-            int end = close ? points.Length : points.Length - 1;
-            for (int i = 0; i < end; i++)
-            {
-                var pa = points[i];
-                var pb = points[(i + 1) % points.Length];
-                curvePercent = ApproximateLength(pa, pb, approxResolution) / length;
-
-                if ((totalPercent + curvePercent > t) || Mathf.Abs(t - (totalPercent + curvePercent)) < 5e-6)
-                {
-                    p1 = pa;
-                    p2 = pb;
-                    break;
-                }
-                else
-                {
-                    totalPercent += curvePercent;
-                }
-            }
-
-            approxResolution += 10;
-
-            if (++safetyCounter >= maxIters)
-            {
-                Debug.LogError("BezierCurve couldn't find a point", this);
-                return Vector3.zero;
-            }
-        }
-
-        t -= totalPercent;
-
-        if (p1 == null) Debug.LogError("p1 is null");
-        if (p2 == null) Debug.LogError("p2 is null");
-
-        return GetPoint(p1, p2, t / curvePercent);
+        TBetweenPointsData tbp = GetTBetweenPoints(t);
+        return GetPoint(tbp.p1, tbp.p2, tbp.t);
     }
 
     public Vector3 GetTangentAt(float t)
     {
-        if (t <= 0) return points[0].position;
-        else if (t >= 1) return points[points.Length - 1].position;
-
-        float totalPercent = 0;
-        float curvePercent = 0;
-
-        BezierPoint p1 = null;
-        BezierPoint p2 = null;
-
-        int approxResolution = 10; // added by nothke
-
-        int index = 0;
-        int maxIters = 10;
-
-        while (p1 == null && p2 == null)
-        {
-            for (int i = 0; i < points.Length - 1; i++)
-            {
-                curvePercent = ApproximateLength(points[i], points[i + 1], approxResolution) / length;
-
-                if (totalPercent + curvePercent > t)
-                {
-                    p1 = points[i];
-                    p2 = points[i + 1];
-                    break;
-                }
-
-                else totalPercent += curvePercent;
-            }
-
-            index++;
-
-            approxResolution += 10;
-
-            if (index >= maxIters)
-            {
-                Debug.LogWarning("TOO MUCH ITERATIONS!!!");
-                return Vector3.zero;
-            }
-        }
-
-        if (close && p1 == null)
-        {
-            p1 = points[points.Length - 1];
-            p2 = points[0];
-        }
-
-        t -= totalPercent;
-
-        if (p1 == null) Debug.LogError("p1 is null");
-        if (p2 == null) Debug.LogError("p2 is null");
-
-        return GetTangent(p1, p2, t / curvePercent);
+        TBetweenPointsData tbp = GetTBetweenPoints(t);
+        return GetTangent(tbp.p1, tbp.p2, tbp.t);
     }
 
     public Vector3 GetTangent(BezierPoint bp1, BezierPoint bp2, float t)
