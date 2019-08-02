@@ -383,7 +383,7 @@ public class BezierCurve : MonoBehaviour
     public Vector3 GetPointAt(float t)
     {
         if (t <= 0) return points[0].position;
-        else if (t >= 1) return points[points.Length - 1].position;
+        else if (t >= 1) return (close ? points[0] : points[points.Length - 1]).position;
 
         float totalPercent = 0;
         float curvePercent = 0;
@@ -391,44 +391,42 @@ public class BezierCurve : MonoBehaviour
         BezierPoint p1 = null;
         BezierPoint p2 = null;
 
-        // code below modified by nothke
-
         int approxResolution = 10;
 
-        int index = 0;
+
+        int safetyCounter = 0;
         int maxIters = 10;
 
         while (p1 == null && p2 == null)
         {
-            for (int i = 0; i < points.Length - 1; i++)
-            {
-                curvePercent = ApproximateLength(points[i], points[i + 1], approxResolution) / length;
+            totalPercent = 0;
 
-                if (totalPercent + curvePercent > t)
+            int end = close ? points.Length : points.Length - 1;
+            for (int i = 0; i < end; i++)
+            {
+                var pa = points[i];
+                var pb = points[(i + 1) % points.Length];
+                curvePercent = ApproximateLength(pa, pb, approxResolution) / length;
+
+                if ((totalPercent + curvePercent > t) || Mathf.Abs(t - (totalPercent + curvePercent)) < 5e-6)
                 {
-                    p1 = points[i];
-                    p2 = points[i + 1];
+                    p1 = pa;
+                    p2 = pb;
                     break;
                 }
-
-                else totalPercent += curvePercent;
+                else
+                {
+                    totalPercent += curvePercent;
+                }
             }
-
-            index++;
 
             approxResolution += 10;
 
-            if (index >= maxIters)
+            if (++safetyCounter >= maxIters)
             {
-                Debug.LogWarning("TOO MUCH ITERATIONS!!!");
+                Debug.LogError("BezierCurve couldn't find a point", this);
                 return Vector3.zero;
             }
-        }
-
-        if (close && p1 == null)
-        {
-            p1 = points[points.Length - 1];
-            p2 = points[0];
         }
 
         t -= totalPercent;
