@@ -696,22 +696,6 @@ public class BezierCurve : MonoBehaviour
         return point;
     }
 
-    /// <summary>
-    ///     - Gets the point 't' percent along a curve
-    ///     - Automatically calculates for the number of relevant points
-    /// </summary>
-    /// <returns>
-    ///     - The point 't' percent along the curve
-    /// </returns>
-    /// <param name='p1'>
-    ///     - The bezier point at the beginning of the curve
-    /// </param>
-    /// <param name='p2'>
-    ///     - The bezier point at the end of the curve
-    /// </param>
-    /// <param name='t'>
-    ///     - Value between 0 and 1 representing the percent along the curve (0 = 0%, 1 = 100%)
-    /// </param>
     public static Vector3 GetPoint(BezierPoint p1, BezierPoint p2, float t)
     {
         return GetPoint(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, t);
