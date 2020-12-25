@@ -1,0 +1,23 @@
+{
+  "name": "com.arkhaminteractive.beziercurves",
+  "version": "1.0.0",
+  "displayName": "Bezier Curves",
+  "description": "Originally based on the \"Bezier Curve Editor Package\" by \"Arkham Interactive\" from Unity Asset Store, with some modifications made further (see README file for more info)",
+  "unity": "2019.2",
+  "keywords": [
+    "bezier", "curve", "curves"
+  ],
+  "author": {
+    "name": "Nenad Ognjanovic",
+    "email": "bgrgyk@gmail.com"
+  },
+  "type": "library",
+  "hideInEditor": false,
+  "samples": [
+    {
+      "displayName": "Example",
+      "description": "Original example scene from the Asset Store version",
+      "path": "Samples~/Example"
+    }
+  ]
+}
